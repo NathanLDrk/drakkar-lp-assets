@@ -10,7 +10,7 @@
   var ICONS = {
     "arrow-right": '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
     "arrow-up-right": '<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
-    "lpa-check": '<path d="M20 6 9 17l-5-5"/>',
+    "check": '<path d="M20 6 9 17l-5-5"/>',
     "plus": '<path d="M5 12h14"/><path d="M12 5v14"/>',
     "search": '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
     "monitor": '<rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>',
@@ -205,7 +205,7 @@
   (function bento() {
     var b = d.querySelector(".lpa-bento"); if (!b || reduced) return;
     onView(b, function (v) { b.classList.toggle("lpa-play", v); }, 0.15);
-    var typed = b.querySelector(".va-typed"), ans = b.querySelector(".lpa-va-a");
+    var typed = b.querySelector(".lpa-va-q [data-text]"), ans = b.querySelector(".lpa-va-a");
     if (!typed) return;
     var text = typed.getAttribute("data-text");
     (async function loop() {
