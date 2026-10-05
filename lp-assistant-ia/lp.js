@@ -551,8 +551,9 @@
 
   /* ---------- Compteurs : data-count="13" data-dec="1" data-suffix=" Md€" ---------- */
   d.querySelectorAll("[data-count]").forEach(function (el) {
-    var to = parseFloat(el.getAttribute("data-count")), dec = +(el.getAttribute("data-dec") || 0), suf = el.getAttribute("data-suffix") || "", done = false;
-    function show(v) { el.textContent = fmt(v, dec) + suf; }
+    var to = parseFloat(el.getAttribute("data-count")), dec = +(el.getAttribute("data-dec") || 0), suf = (el.getAttribute("data-suffix") || "").trim(), done = false;
+    // Webflow supprime l'espace en tête des attributs : on ajoute l'espace insécable ici
+    function show(v) { el.textContent = fmt(v, dec) + (suf ? "\u00a0" + suf : ""); }
     if (reduced) return show(to);
     show(0);
     onView(el, function (v) {
