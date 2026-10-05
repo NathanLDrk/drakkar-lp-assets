@@ -44,6 +44,9 @@
     "shield": '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
     "refresh": '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
     "alert": '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+    "euro": '<path d="M4 10h12"/><path d="M4 14h9"/><path d="M19 6a7.7 7.7 0 0 0-5.2-2A7.9 7.9 0 0 0 6 12c0 4.4 3.5 8 7.8 8 2 0 3.8-.8 5.2-2"/>',
+    "bank": '<path d="M3 22h18"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M12 2 20 7H4z"/>',
+    "calendar": '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>',
     "repeat": '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>'
   };
   function icon(name, size, sw) {
@@ -542,6 +545,38 @@
       for (var n = 0; ; n = (n + 1) % ITEMS.length) {
         while (!visible) await wait(300);
         await show(ITEMS[n], n);
+      }
+    })();
+  })();
+
+  /* ---------- Compteurs : data-count="13" data-dec="1" data-suffix=" Md€" ---------- */
+  d.querySelectorAll("[data-count]").forEach(function (el) {
+    var to = parseFloat(el.getAttribute("data-count")), dec = +(el.getAttribute("data-dec") || 0), suf = el.getAttribute("data-suffix") || "", done = false;
+    function show(v) { el.textContent = fmt(v, dec) + suf; }
+    if (reduced) return show(to);
+    show(0);
+    onView(el, function (v) {
+      if (!v || done) return; done = true;
+      var t0 = performance.now();
+      (function step(now) { var p = Math.min(1, (now - t0) / 1400), e = 1 - Math.pow(1 - p, 3); show(to * e); if (p < 1) requestAnimationFrame(step); })(t0);
+    }, 0.4);
+  });
+
+  /* ---------- Scénario : les étapes s'allument une à une (#scen) ---------- */
+  (function scen() {
+    var s = d.getElementById("scen"); if (!s) return;
+    var steps = s.querySelectorAll(".lpa-scen-step"), fill = s.querySelector(".lpa-scen-fill"), visible = false;
+    function setTo(n) {
+      steps.forEach(function (st, i) { st.classList.toggle("lpa-on", i < n); });
+      fill.style.setProperty("--p", n <= 1 ? "0%" : ((n - 1) / (steps.length - 1) * 100) + "%");
+    }
+    if (reduced) return setTo(steps.length);
+    onView(s, function (v) { visible = v; }, 0.3);
+    (async function loop() {
+      while (true) {
+        while (!visible) await wait(300);
+        for (var n = 1; n <= steps.length; n++) { setTo(n); await wait(1100); }
+        await wait(3500); setTo(0); await wait(600);
       }
     })();
   })();
