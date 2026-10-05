@@ -5,6 +5,9 @@
   "use strict";
   var d = document, w = window;
   var reduced = w.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Config propre à chaque LP (window.LPA, défini avant ce script) : hero, workflow, cases, orb, shareSubject.
+  // Sans config, on joue le scénario du hub « Assistant IA ».
+  var CFG = w.LPA || {};
 
   /* ---------- Icônes (Lucide, MIT) ---------- */
   var ICONS = {
@@ -33,7 +36,15 @@
     "filter": '<path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>',
     "calculator": '<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M8 6h8"/><path d="M16 14v4"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/>',
     "phone": '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
-    "bar-chart": '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>'
+    "bar-chart": '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+    "inbox": '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+    "star": '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',
+    "tag": '<path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r="1"/>',
+    "archive": '<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
+    "shield": '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+    "refresh": '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
+    "alert": '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+    "repeat": '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>'
   };
   function icon(name, size, sw) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (sw || 2) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[name] || "") + "</svg>";
@@ -44,7 +55,8 @@
     if (el.closest(".lpa-app-plus,.lpa-app-search,.lpa-composer-plus,.lpa-app-head-ico")) s = 15;
     if (el.closest(".lpa-composer-mic")) s = 17;
     if (el.closest(".lpa-share-ico")) s = 20;
-    if (el.closest(".lpa-pill-sm,.lpa-wf-ico")) s = 15;
+    if (el.closest(".lpa-pill-sm,.lpa-wf-ico,.lpa-fold,.lpa-hero-trust")) s = 15;
+    if (el.closest(".lpa-feat-ico")) s = 17;
     el.innerHTML = icon(n, s, s <= 15 ? 2.2 : 1.9);
   });
 
@@ -82,10 +94,10 @@
      HERO : simulation d'un assistant IA qui prépare un devis
      ========================================================= */
   (function heroChat() {
-    var app = d.getElementById("app"); if (!app) return;
+    var app = d.getElementById("app"); if (!app || !d.getElementById("chatIn")) return;
     var chatIn = d.getElementById("chatIn"), last = d.getElementById("agentLast");
     var composer = app.querySelector(".lpa-composer-txt"), composerDefault = composer.textContent;
-    var relAgent = app.querySelector('[data-agent="relances"] .lpa-agent-last');
+    function agent(k) { return app.querySelector('[data-agent="' + k + '"] .lpa-agent-last'); }
     var cursor = h("div", "lpa-cursor", '<svg width="20" height="20" viewBox="0 0 24 24"><path d="M4 2l16 9-7 2-3 7z" fill="#151515" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>');
     app.appendChild(cursor);
     var visible = false;
@@ -115,11 +127,34 @@
       await wait(1100);
     }
 
-    async function run() {
-      chatIn.innerHTML = ""; chatIn.classList.remove("lpa-fade");
-      last.textContent = "Nouvelle conversation"; last.classList.remove("lpa-typing");
+    function writing(on, text) { last.textContent = text || "écrit…"; last.classList.toggle("lpa-typing", !!on); }
+    function tool(title, st, desc, body) {
+      return add(h("div", "lpa-tool", '<div class="lpa-tool-head">' + title + '<span class="lpa-st lpa-st-work">' + st + '</span></div>' +
+        (desc ? '<p class="lpa-tool-desc">' + desc + '</p>' : "") + (body != null ? '<div class="lpa-tool-body">' + body + '</div>' : "")));
+    }
+    async function count(el, to, ms, dec) {
+      var t0 = performance.now();
+      await new Promise(function (res) {
+        (function step(now) {
+          var p = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - p, 3);
+          el.textContent = fmt(to * e, dec);
+          if (p < 1) requestAnimationFrame(step); else res();
+        })(t0);
+      });
+    }
+    async function type(el, text, ms) { el.textContent = ""; for (var i = 0; i < text.length; i++) { el.textContent += text[i]; await wait(ms || 14); } }
+    async function click(btn) {
+      await moveCursorTo(btn);
+      btn.classList.add("lpa-pressed"); await wait(180); btn.classList.remove("lpa-pressed");
+      await wait(250); cursor.style.opacity = 0;
+    }
+    var api = { app: app, h: h, add: add, wait: wait, think: think, status: status, typeComposer: typeComposer, writing: writing,
+      tool: tool, count: count, type: type, click: click, agent: agent, last: last, fmt: fmt, icon: icon };
+
+    // Scénario par défaut (hub) : l'assistant devis
+    async function devis() {
+      var relAgent = agent("relances");
       relAgent.textContent = "6 factures relancées, 2 réglées";
-      await until();
       add(h("div", "lpa-m lpa-m-time", "Aujourd'hui · 08:42"));
       await wait(700);
       var ask = "Rénov'Habitat nous a envoyé une demande de devis ce matin. Tu peux le préparer avec nos tarifs habituels ?";
@@ -193,6 +228,13 @@
       await wait(900);
       add(h("div", "lpa-m lpa-m-sys", '<span class="lpa-av lpa-av-3 lpa-av-sm"><span class="lpa-av-eyes"><i></i><i></i></span></span> Relances clients a pris le relais pour jeudi'));
       relAgent.textContent = "Relance Rénov'Habitat prévue jeudi";
+    }
+
+    async function run() {
+      chatIn.innerHTML = ""; chatIn.classList.remove("lpa-fade");
+      last.textContent = "Nouvelle conversation"; last.classList.remove("lpa-typing");
+      await until();
+      await (CFG.hero || devis)(api);
       await wait(5200);
       chatIn.classList.add("lpa-fade");
       await wait(700);
@@ -278,31 +320,49 @@
       await wait(ms); ids.forEach(function (i) { set(i, "done"); });
     }
     async function until() { while (!visible) await wait(300); }
+    // Étapes jouées dans l'ordre ; les liens parcourus sont ceux qui relient l'étape précédente à la suivante (data-to)
+    var FLOW = CFG.workflow || {
+      idle: "En attente d'un mail…",
+      steps: [
+        { ids: ["mail"], say: "Nouveau mail reçu de Rénov'Habitat", ms: 900 },
+        { ids: ["read"], say: "L'IA lit la demande…", ms: 1500 },
+        { ids: ["tarifs", "stock"], say: "Vérification des tarifs et du stock…", ms: 1300 },
+        { ids: ["devis"], say: "Rédaction du devis…", ms: 1600 },
+        { ids: ["valid"], human: true, say: "En attente de votre validation…", after: "Validé par Marc", ms: 2000 },
+        { ids: ["send", "crm"], say: "Envoi du devis et mise à jour du client…", ms: 1200 },
+        { ids: ["relance"], instant: true, say: "Terminé · relance programmée jeudi 9 h" }
+      ],
+      done: "devis envoyé"
+    };
     async function run() {
       var my = ++gen;
       Object.keys(nodes).forEach(function (i) { set(i, null); });
       Object.keys(edges).forEach(function (k) { edges[k].classList.remove("lpa-on"); });
-      wf.classList.remove("lpa-running"); say("En attente d'un mail…");
+      wf.classList.remove("lpa-running"); say(FLOW.idle);
       await until(); await wait(1200); if (my !== gen) return;
       wf.classList.add("lpa-running");
-      await work(["mail"], "Nouveau mail reçu de Rénov'Habitat", 900);
-      await travel("mail>read", 800);
-      await work(["read"], "L'IA lit la demande…", 1500);
-      await Promise.all([travel("read>tarifs", 800), travel("read>stock", 800)]);
-      await work(["tarifs", "stock"], "Vérification des tarifs et du stock…", 1300);
-      await Promise.all([travel("tarifs>devis", 800), travel("stock>devis", 800)]);
-      await work(["devis"], "Rédaction du devis…", 1600);
-      await travel("devis>valid", 800);
-      set("valid", "wait"); say("En attente de votre validation…");
-      await wait(2000); set("valid", "done"); say("Validé par Marc");
-      await wait(500);
-      await Promise.all([travel("valid>send", 800), travel("valid>crm", 800)]);
-      await work(["send", "crm"], "Envoi du devis et mise à jour du client…", 1200);
-      await travel("send>relance", 800);
-      set("relance", "done"); say("Terminé · relance programmée jeudi 9 h");
+      for (var i = 0; i < FLOW.steps.length; i++) {
+        var s = FLOW.steps[i];
+        if (i > 0) {
+          var keys = [];
+          FLOW.steps[i - 1].ids.forEach(function (a) { s.ids.forEach(function (b) { if (edges[a + ">" + b]) keys.push(a + ">" + b); }); });
+          await Promise.all(keys.map(function (k) { return travel(k, 800); }));
+        }
+        if (my !== gen) return;
+        if (s.human) {
+          s.ids.forEach(function (id) { set(id, "wait"); }); say(s.say);
+          await wait(s.ms || 2000); s.ids.forEach(function (id) { set(id, "done"); });
+          if (s.after) say(s.after);
+          await wait(500);
+        } else if (s.instant) {
+          s.ids.forEach(function (id) { set(id, "done"); }); say(s.say);
+        } else {
+          await work(s.ids, s.say, s.ms || 1200);
+        }
+      }
       if (my !== gen) return;
       countEl.textContent = (+countEl.textContent + 1);
-      logEl.textContent = "Dernière exécution : terminée en 1 min " + (5 + Math.floor(Math.random() * 20)) + " s · devis envoyé";
+      logEl.textContent = "Dernière exécution : terminée en 1 min " + (5 + Math.floor(Math.random() * 20)) + " s · " + FLOW.done;
       wf.classList.remove("lpa-running");
       await wait(4500);
     }
@@ -322,7 +382,8 @@
     var SVGNS = "http://www.w3.org/2000/svg";
     function N(ic, type, title, sub, human) { return { icon: ic, type: type, title: title, sub: sub, human: !!human }; }
     // Chaque cas : niveaux successifs (1 ou 2 blocs par niveau) + texte d'état par niveau
-    var CASES = [
+    // Une LP peut fournir ses propres cas (blocs en tableaux : [icône, type, titre, sous-titre, humain?])
+    var CASES = (CFG.cases || [
       { name: "Devis", strong: "Des devis prêts en quelques minutes.", text: "L'assistant lit la demande du client, reprend vos tarifs et votre stock, et vous prépare le devis. Vous validez, il l'envoie.",
         levels: [[N("mail", "Déclencheur", "Demande de devis", "Reçue par email")], [N("scan-text", "IA", "Lecture de la demande", "Client, produits, délai")], [N("sheet", "Excel", "Tarifs 2026", "Prix et remises"), N("box", "Stock", "Disponibilité", "48 m² en dépôt")], [N("file-text", "IA", "Devis rédigé", "2 067 € HT")], [N("user-check", "Vous", "Validation", "En 1 clic", true)], [N("send", "Email", "Envoyé au client", "PDF + message")]],
         says: ["Nouvelle demande reçue", "L'IA lit la demande…", "Tarifs et stock vérifiés", "Rédaction du devis…", "En attente de votre validation…", "Devis envoyé"], log: "Devis D-2026-118 envoyé à Rénov'Habitat" },
@@ -344,10 +405,13 @@
       { name: "Planning des tournées", strong: "Des tournées organisées toutes seules.", text: "L'assistant regroupe les livraisons du lendemain, propose les tournées, prévient les clients de leur créneau et envoie le planning aux chauffeurs.",
         levels: [[N("box", "Déclencheur", "Livraisons de demain", "23 commandes")], [N("bar-chart", "IA", "Tournées optimisées", "3 camions, 186 km")], [N("clock", "Agenda", "Planning à jour", "Créneaux bloqués"), N("send", "SMS", "Clients prévenus", "Créneau de 2 h")], [N("users", "Équipe", "Chauffeurs informés", "Feuille de route envoyée")]],
         says: ["Livraisons à planifier", "Calcul des tournées…", "Planning et SMS envoyés", "Équipe informée"], log: "Tournées de jeudi prêtes à 17:00" }
-    ];
+    ]).map(function (c) {
+      c.levels = c.levels.map(function (lv) { return lv.map(function (n) { return Array.isArray(n) ? N.apply(null, n) : n; }); });
+      return c;
+    });
     var cur = 0, gen = 0, visible = false, edges = [];
     CASES.forEach(function (c, i) {
-      var b = h("button", "lpa-uc-chip", '<span class="lpa-orb" aria-hidden="true"><span class="lpa-orb-eyes"><i></i><i></i></span></span>' + c.name);
+      var b = h("button", "lpa-uc-chip", '<span class="lpa-orb' + (CFG.orb ? " " + CFG.orb : "") + '" aria-hidden="true"><span class="lpa-orb-eyes"><i></i><i></i></span></span>' + c.name);
       b.type = "button"; b.setAttribute("role", "tab");
       b.addEventListener("click", function () { if (i !== cur) select(i); });
       chips.appendChild(b);
@@ -446,6 +510,45 @@
     select(0);
   })();
 
+  /* ---------- Analyse : l'assistant passe des éléments au crible (CFG.prio) ---------- */
+  (function prio() {
+    var panel = d.getElementById("prio"); if (!panel || !CFG.prio) return;
+    var body = panel.querySelector(".lpa-prio-body"), stateEl = panel.querySelector(".lpa-prio-state"), logEl = panel.querySelector(".lpa-prio-log");
+    var ITEMS = CFG.prio, visible = false;
+    onView(panel, function (v) { visible = v; }, 0.3);
+    async function show(it, n) {
+      body.classList.add("lpa-fade"); await wait(300);
+      body.innerHTML = ""; body.classList.remove("lpa-fade");
+      panel.classList.add("lpa-running");
+      stateEl.textContent = "Analyse de l'e-mail " + (n + 1) + " sur " + ITEMS.length + "…";
+      var mail = body.appendChild(h("div", "lpa-prio-mail",
+        '<div class="lpa-prio-from"><b>' + it.from + '</b><span>' + it.time + '</span></div><p class="lpa-prio-subj">' + it.subject + '</p><p class="lpa-prio-ex">' + it.excerpt + '</p><span class="lpa-scanline"></span>'));
+      await wait(1400);
+      var list = body.appendChild(h("div", "lpa-crit"));
+      for (var i = 0; i < it.crit.length; i++) {
+        list.appendChild(h("div", "lpa-crit-row", "<span>" + it.crit[i][0] + "</span><b>" + it.crit[i][1] + "</b>"));
+        await wait(520);
+      }
+      var sl = mail.querySelector(".lpa-scanline"); if (sl) sl.remove();
+      await wait(350);
+      body.appendChild(h("div", "lpa-verdict lpa-verdict-" + it.kind,
+        '<span class="lpa-verdict-t">' + icon(it.icon || "star", 16, 2.2) + it.verdict + '</span><span class="lpa-verdict-s">' + it.then + "</span>"));
+      stateEl.textContent = it.state || "Classé";
+      logEl.textContent = it.log || "";
+      panel.classList.remove("lpa-running");
+      await wait(4200);
+    }
+    (async function loop() {
+      for (var n = 0; ; n = (n + 1) % ITEMS.length) {
+        while (!visible) await wait(300);
+        await show(ITEMS[n], n);
+      }
+    })();
+  })();
+
+  /* ---------- Animations propres à une LP (CFG.init) ---------- */
+  if (CFG.init) CFG.init({ h: h, wait: wait, onView: onView, icon: icon, fmt: fmt, reduced: reduced });
+
   /* ---------- Méthode : la frise se remplit au scroll ---------- */
   (function timeline() {
     var tl = d.getElementById("timeline"); if (!tl) return;
@@ -464,7 +567,7 @@
   (function share() {
     var copy = d.getElementById("copyLink"), mail = d.getElementById("mailLink");
     var url = location.href.split("#")[0];
-    if (mail) mail.href = "mailto:?subject=" + encodeURIComponent("À regarder : l'IA pour notre entreprise") + "&body=" + encodeURIComponent("Je suis tombé sur ça, je pense que ça peut nous faire gagner pas mal de temps :\n\n" + url);
+    if (mail) mail.href = "mailto:?subject=" + encodeURIComponent(CFG.shareSubject || "À regarder : l'IA pour notre entreprise") + "&body=" + encodeURIComponent("Je suis tombé sur ça, je pense que ça peut nous faire gagner pas mal de temps :\n\n" + url);
     if (copy) copy.addEventListener("click", function () {
       var lab = copy.querySelector("span");
       (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function () {
