@@ -426,6 +426,14 @@ i[data-icon] svg{display:block}
 .lpa-sorted .lpa-mini-row.lpa-ready .lpa-mini-star{color:#bb1d08}
 .lpa-mini-row.lpa-ok .lpa-mini-tag{background-color:rgba(34,164,90,.12);color:#16834a}
 .lpa-sorted .lpa-mini-row.lpa-ok .lpa-mini-star{color:#22a45a}
+.lpa-app-order .lpa-mrow.lpa-scan{background-color:rgba(21,21,21,.05)}
+.lpa-mrow.lpa-okrow .lpa-star{color:#22a45a}
+.lpa-app-order .lpa-summary{background-color:#f4f4f2}
+.lpa-app-order .lpa-summary-h{color:#151515}
+.lpa-app-order .lpa-mopen{gap:10px;padding:16px 18px}
+.lpa-app-order .lpa-q-row{padding:5px 0}
+.lpa-q-row.lpa-q-flag{margin:0 -6px;padding:5px 6px;border-radius:6px;background-color:rgba(201,138,18,.13);color:#8a5d06}
+.lpa-q-row.lpa-q-flag small{display:block;font-size:11.5px;font-weight:700}
 .lpa-stat-v{font-size:clamp(40px,4.2vw,60px);font-weight:600;font-variant-numeric:tabular-nums}
 .lpa-src a{color:inherit}
 .lpa-scen-rail{left:8px;right:calc((100% - 64px) / 5 - 8px);top:7px}
