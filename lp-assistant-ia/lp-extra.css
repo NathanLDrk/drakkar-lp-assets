@@ -412,6 +412,20 @@ i[data-icon] svg{display:block}
 .lpa-verdict-call{background-color:#151515;color:#fff}
 .lpa-verdict-paid{background-color:rgba(34,164,90,.12);color:#16834a}
 .lpa-ping-pill.lpa-ok{color:#16834a}
+.lpa-app-quote .lpa-mrow.lpa-scan{background-color:rgba(187,29,8,.06)}
+.lpa-mrow.lpa-ready .lpa-star{color:#bb1d08}
+.lpa-mrow.lpa-ask .lpa-star{color:#c98a12}
+.lpa-tag-ready{background-color:rgba(187,29,8,.1);color:#9c1806}
+.lpa-tag-ask{background-color:rgba(201,138,18,.13);color:#8a5d06}
+.lpa-app-quote .lpa-summary{background-color:rgba(187,29,8,.06)}
+.lpa-app-quote .lpa-summary-h{color:#9c1806}
+.lpa-app-quote .lpa-mopen{gap:10px;padding:16px 18px}
+.lpa-app-quote .lpa-q-row{padding:5px 0}
+.lpa-verdict-ready{background-color:rgba(187,29,8,.1);color:#9c1806}
+.lpa-mini-row.lpa-ready .lpa-mini-tag{background-color:rgba(187,29,8,.1);color:#9c1806}
+.lpa-sorted .lpa-mini-row.lpa-ready .lpa-mini-star{color:#bb1d08}
+.lpa-mini-row.lpa-ok .lpa-mini-tag{background-color:rgba(34,164,90,.12);color:#16834a}
+.lpa-sorted .lpa-mini-row.lpa-ok .lpa-mini-star{color:#22a45a}
 .lpa-stat-v{font-size:clamp(40px,4.2vw,60px);font-weight:600;font-variant-numeric:tabular-nums}
 .lpa-src a{color:inherit}
 .lpa-scen-rail{left:8px;right:calc((100% - 64px) / 5 - 8px);top:7px}

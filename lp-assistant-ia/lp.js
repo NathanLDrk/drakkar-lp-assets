@@ -523,7 +523,7 @@
       body.classList.add("lpa-fade"); await wait(300);
       body.innerHTML = ""; body.classList.remove("lpa-fade");
       panel.classList.add("lpa-running");
-      stateEl.textContent = "Analyse de l'e-mail " + (n + 1) + " sur " + ITEMS.length + "…";
+      stateEl.textContent = "Analyse de " + (CFG.prioNoun || "l'e-mail") + " " + (n + 1) + " sur " + ITEMS.length + "…";
       var mail = body.appendChild(h("div", "lpa-prio-mail",
         '<div class="lpa-prio-from"><b>' + it.from + '</b><span>' + it.time + '</span></div><p class="lpa-prio-subj">' + it.subject + '</p><p class="lpa-prio-ex">' + it.excerpt + '</p><span class="lpa-scanline"></span>'));
       await wait(1400);
