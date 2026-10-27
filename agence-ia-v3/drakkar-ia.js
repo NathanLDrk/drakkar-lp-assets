@@ -36,7 +36,7 @@ return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + e * fx) * fy;
 let CELL = 8, W, H, cols, rows, cells = [], drops = [];
 function build() {
 const r = host.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
-W = r.width; H = r.height; CELL = W < 700 ? 5 : 6;
+W = r.width; H = r.height; CELL = 6;
 cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 ctx.font = `600 ${CELL}px ui-monospace, Menlo, monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -75,7 +75,7 @@ let last = 0, raf = 0;
 const flip = c => { c.c = c.c === '0' ? '1' : '0'; };
 const frame = now => {
 raf = requestAnimationFrame(frame);
-if (now - last < 33) return; // ~30 i/s suffit et ménage le CPU
+if (now - last < (W < 700 ? 42 : 33)) return; // ~30 i/s (24 sur mobile) suffit et ménage le CPU
 last = now;
 const f = reduce ? 1 : formAt(now);
 if (!reduce) sync(now);
