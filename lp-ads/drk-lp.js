@@ -74,7 +74,10 @@ if (calEls.length || calInline.length) {
     el.addEventListener('click', e => e.preventDefault());
   });
   nss.add('projet');
-  nss.forEach(ns => { Cal('init', ns, { origin: 'https://cal.com' }); Cal.ns[ns]('ui', { hideEventTypeDetails: false, layout: 'month_view' }); });
+  /* conversion : chaque réservation pousse un événement GTM (à brancher sur la conversion Google Ads) */
+  const booked = ns => () => { (window.dataLayer = window.dataLayer || []).push({ event: 'cal_booking_success', cal_namespace: ns, landing_page: page }); };
+  const track = ns => { ['bookingSuccessful', 'bookingSuccessfulV2'].forEach(a => Cal.ns[ns]('on', { action: a, callback: booked(ns) })); };
+  nss.forEach(ns => { Cal('init', ns, { origin: 'https://cal.com' }); Cal.ns[ns]('ui', { hideEventTypeDetails: false, layout: 'month_view' }); track(ns); });
   /* calendrier intégré dans la page : chargé seulement à l'approche de la section */
   calInline.forEach((el, i) => {
     const ns = 'inline' + i;
@@ -82,7 +85,7 @@ if (calEls.length || calInline.length) {
       if (!es[0].isIntersecting) return; io.disconnect();
       Cal('init', ns, { origin: 'https://cal.com' });
       Cal.ns[ns]('inline', { elementOrSelector: el, calLink: el.dataset.calInline, config: meta });
-      Cal.ns[ns]('ui', { hideEventTypeDetails: false, layout: 'month_view' });
+      Cal.ns[ns]('ui', { hideEventTypeDetails: false, layout: 'month_view' }); track(ns);
     }, { rootMargin: '600px 0px' }).observe(el);
   });
 }
