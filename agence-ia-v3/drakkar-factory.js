@@ -379,18 +379,16 @@ const css = `.w-embed:has(> .drk-fab){width:100%}
 .drk-fab-scene svg text{font-family:Urbanist,system-ui,sans-serif}
 .drk-fab-cam{transform-box:view-box;transform-origin:62% 50%;animation:drkFabCam 26s cubic-bezier(.45,0,.55,1) infinite alternate}
 @keyframes drkFabCam{from{transform:translate(0,0) scale(1)}to{transform:translate(-2.2%,-1.4%) scale(1.045)}}
-.drk-fab::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(17,17,19,.94) 0%,rgba(17,17,19,.86) 30%,rgba(17,17,19,.35) 46%,rgba(17,17,19,0) 60%),linear-gradient(0deg,rgba(17,17,19,.55) 0%,rgba(17,17,19,0) 30%)}
-.drk-fab-copy{position:absolute;z-index:2;left:clamp(28px,5vw,72px);bottom:clamp(28px,5vw,64px);max-width:440px}
-.drk-fab-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.75)}
-.drk-fab-eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--drk-accent);box-shadow:0 0 0 4px rgba(61,123,255,.2)}
-.drk-fab h2{margin:18px 0 12px;font-size:clamp(40px,5.4vw,68px);line-height:1;font-weight:500;letter-spacing:-.02em;color:#fff}
-.drk-fab h2 span{color:rgba(255,255,255,.45)}
-.drk-fab p{margin:0 0 26px;font-size:17px;line-height:1.5;color:rgba(255,255,255,.66)}
+.drk-fab::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(60% 70% at 50% 50%,rgba(12,12,14,.82) 0%,rgba(12,12,14,.62) 55%,rgba(12,12,14,.5) 100%)}
+.drk-fab-copy{position:absolute;z-index:2;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 24px}
+.drk-fab h2{margin:0 0 18px;font-family:Urbanist,system-ui,sans-serif;font-size:clamp(34px,4vw,56px);line-height:1.1;font-weight:400;letter-spacing:-.01em;color:#fff}
+.drk-fab h2 span{color:rgba(255,255,255,.5)}
+.drk-fab p{margin:0 0 30px;max-width:520px;font-size:17px;line-height:1.5;color:rgba(255,255,255,.7)}
 .drk-fab-cta{display:inline-flex;align-items:center;gap:14px;padding:8px 8px 8px 22px;border-radius:999px;background:#fff;color:#111113;font-weight:600;font-size:16px;text-decoration:none;transition:transform .5s cubic-bezier(.32,.72,0,1)}
 .drk-fab-cta b{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#111113;color:#fff;font-weight:500;transition:transform .5s cubic-bezier(.32,.72,0,1)}
 .drk-fab-cta:hover b{transform:translateX(3px)}
 .drk-fab-cta:active{transform:scale(.98)}
-@media (max-width:767px){.drk-fab{aspect-ratio:auto;min-height:620px;border-radius:20px}.drk-fab::before{background:linear-gradient(0deg,rgba(17,17,19,.96) 0%,rgba(17,17,19,.85) 36%,rgba(17,17,19,0) 62%)}.drk-fab-copy{left:20px;right:20px;bottom:24px}.drk-fab p{font-size:15px}}
+@media (max-width:767px){.drk-fab{aspect-ratio:auto;min-height:560px;border-radius:20px}.drk-fab::before{background:rgba(12,12,14,.74)}.drk-fab p{font-size:15px}}
 @media (prefers-reduced-motion:reduce){.drk-fab-cam{animation:none}}`;
 const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -407,8 +405,8 @@ scene.querySelector('.f').innerHTML = FRONT();
 // cadrage : l'atelier remplit la partie droite et déborde légèrement
 const fit = () => {
   const mob = host.clientWidth < 768;
-  const k = mob ? .6 : .7, cx = mob ? 660 : 830, cy = mob ? 220 : 318;
-  const [mx, my] = P(FW / 2 + 60, FD / 2 + 40, 0);
+  const k = mob ? .62 : .72, cx = 636, cy = mob ? 300 : 316;
+  const [mx, my] = P(FW / 2 + 40, FD / 2 + 30, 0);
   fitG.setAttribute('transform', `translate(${f1(cx - mx * k)},${f1(cy - my * k)}) scale(${k})`);
 };
 fit(); addEventListener('resize', fit);
