@@ -373,13 +373,13 @@ const FRONT = () => {
 
 /* ---------- montage ---------- */
 const css = `.w-embed:has(> .drk-fab){width:100%}
-.drk-fab{--drk-accent:#3d7bff;position:relative;overflow:hidden;isolation:isolate;width:100%;aspect-ratio:1272/633;min-height:480px;border-radius:28px;background:radial-gradient(120% 120% at 70% 40%,#1e1e22 0%,#111113 70%);color:#fff;font-family:Urbanist,system-ui,sans-serif}
+.drk-fab{--drk-accent:#3d7bff;position:relative;overflow:hidden;isolation:isolate;width:100%;aspect-ratio:1272/633;min-height:520px;max-height:860px;background:#000;color:#fff;font-family:Urbanist,system-ui,sans-serif}
 .drk-fab-scene{position:absolute;inset:0;z-index:0}
 .drk-fab-scene svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 .drk-fab-scene svg text{font-family:Urbanist,system-ui,sans-serif}
 .drk-fab-cam{transform-box:view-box;transform-origin:62% 50%;animation:drkFabCam 26s cubic-bezier(.45,0,.55,1) infinite alternate}
 @keyframes drkFabCam{from{transform:translate(0,0) scale(1)}to{transform:translate(-2.2%,-1.4%) scale(1.045)}}
-.drk-fab::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(60% 70% at 50% 50%,rgba(12,12,14,.82) 0%,rgba(12,12,14,.62) 55%,rgba(12,12,14,.5) 100%)}
+.drk-fab::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(60% 70% at 50% 50%,rgba(0,0,0,.8) 0%,rgba(0,0,0,.55) 55%,rgba(0,0,0,.35) 100%)}
 .drk-fab-copy{position:absolute;z-index:2;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 24px}
 .drk-fab h2{margin:0 0 18px;font-family:Urbanist,system-ui,sans-serif;font-size:clamp(34px,4vw,56px);line-height:1.1;font-weight:400;letter-spacing:-.01em;color:#fff}
 .drk-fab h2 span{color:rgba(255,255,255,.5)}
@@ -388,7 +388,7 @@ const css = `.w-embed:has(> .drk-fab){width:100%}
 .drk-fab-cta b{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#111113;color:#fff;font-weight:500;transition:transform .5s cubic-bezier(.32,.72,0,1)}
 .drk-fab-cta:hover b{transform:translateX(3px)}
 .drk-fab-cta:active{transform:scale(.98)}
-@media (max-width:767px){.drk-fab{aspect-ratio:auto;min-height:560px;border-radius:20px}.drk-fab::before{background:rgba(12,12,14,.74)}.drk-fab p{font-size:15px}}
+@media (max-width:767px){.drk-fab{aspect-ratio:auto;min-height:560px}.drk-fab::before{background:rgba(0,0,0,.72)}.drk-fab p{font-size:15px}}
 @media (prefers-reduced-motion:reduce){.drk-fab-cam{animation:none}}`;
 const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
