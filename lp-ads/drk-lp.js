@@ -13,6 +13,12 @@ const css = `
 .lp-nav.is-dark .lp-nav-logo-img.lp-logo-light{display:block}
 .lp-nav.is-dark .lp-nav-logo-img.lp-logo-dark{display:none}
 .lp-nav.is-dark .lp-nav-cta{background-color:#fff;color:#111113}
+.lp-nav .lp-nav-btn,.lp-nav .lp-nav-cal{transition:background-color .35s ease,color .35s ease,border-color .35s ease}
+.lp-nav.is-dark .lp-nav-btn{background-color:#fff;color:#111113}
+.lp-nav.is-dark .lp-nav-btn:hover{background-color:#e6e6e6;color:#111113}
+.lp-nav.is-dark .lp-nav-cal{color:#fff;border-color:rgba(255,255,255,.28)}
+.lp-nav.is-dark .lp-nav-cal:hover{background-color:rgba(255,255,255,.1)}
+.lp-nav-cal .w-embed{display:flex}
 .rv-row{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
 .rv-track{animation:rvScroll var(--rv-dur,60s) linear infinite;will-change:transform}
 .rv-row.is-reverse .rv-track{animation-direction:reverse}
