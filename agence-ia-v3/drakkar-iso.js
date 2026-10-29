@@ -1,5 +1,5 @@
 /* Drakkar IA : illustrations isométriques des cards Agence IA. Source : webflow-scripts/lp-ads/offre/agence-ia-v3/pixel/iso.js */
-(() => { const st = document.createElement('style'); st.textContent = '.w-embed:has(> .drk-iso) { width: 100%; } .drk-iso { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: 20px; overflow: hidden; background: radial-gradient(120% 90% at 50% 35%, #232327 0%, #141416 70%); --drk-accent: #3d7bff; } .drk-iso svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }'; document.head.appendChild(st); })();
+(() => { const st = document.createElement('style'); st.textContent = '.w-embed:has(> .drk-iso) { width: 100%; } .drk-iso { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: 20px; overflow: hidden; background: radial-gradient(120% 90% at 50% 35%, #232327 0%, #141416 70%); --drk-accent: #3d7bff; } .drk-iso svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; } @media (min-width: 992px) { .w-embed:has(> .drk-iso[data-fill]) { flex: 1 1 auto; display: flex; margin-top: 32px; min-height: 0; } .drk-iso[data-fill] { aspect-ratio: auto; flex: 1 1 auto; min-height: 360px; } }'; document.head.appendChild(st); })();
 /* Drakkar IA : illustrations isométriques animées des cards.
    <div class="drk-iso" data-scene="agent|outils|produit|formation"></div>
    SVG redessiné à ~30 i/s uniquement quand le bloc est visible. Couleur d'accent : --drk-accent. */
@@ -185,12 +185,24 @@ const VB = [600, 375];
 function mount(host) {
   const scene = SCENES[host.dataset.scene]; if (!scene) return;
   host.innerHTML = `<svg viewBox="0 0 ${VB[0]} ${VB[1]}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><defs><filter id="drkBlur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="6"/></filter></defs><g class="drk-iso-g"></g></svg>`;
-  const g = host.querySelector('.drk-iso-g');
+  const svg = host.querySelector('svg'), g = host.querySelector('.drk-iso-g');
+  // Boîte englobante de la scène sur toute l'animation, calculée une fois.
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  [.6, 2.5, 4.5, 6.5, 8.5].forEach(tt => { g.innerHTML = scene(tt).svg; const b = g.getBBox(); x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.width); y1 = Math.max(y1, b.y + b.height); });
+  const bw = x1 - x0, bh = y1 - y0;
+  // Le viewBox suit le ratio réel du bloc : si data-fill l'étire en hauteur, la scène grandit
+  // (on accepte de rogner un peu les bords du plateau, ZX) au lieu de rester petite au centre.
   let fit = '';
-  { const PAD = 22; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-    [.6, 2.5, 4.5, 6.5, 8.5].forEach(tt => { g.innerHTML = scene(tt).svg; const b = g.getBBox(); x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.width); y1 = Math.max(y1, b.y + b.height); });
-    const k = Math.min((VB[0] - 2 * PAD) / (x1 - x0), (VB[1] - 2 * PAD) / (y1 - y0));
-    fit = `translate(${(VB[0] - (x1 - x0) * k) / 2 - x0 * k},${(VB[1] - (y1 - y0) * k) / 2 - y0 * k}) scale(${k})`; }
+  const refit = () => {
+    const r = host.getBoundingClientRect(); if (!r.width || !r.height) return;
+    const W = VB[0], H = Math.round(VB[0] * r.height / r.width), PAD = 22;
+    const ZX = host.hasAttribute('data-fill') ? 1.38 : 1;
+    const k = Math.min((W - 2 * PAD) * ZX / bw, (H - 2 * PAD) / bh);
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    fit = `translate(${(W - bw * k) / 2 - x0 * k},${(H - bh * k) / 2 - y0 * k}) scale(${k})`;
+    g.setAttribute('transform', fit);
+  };
+  refit(); new ResizeObserver(refit).observe(host);
   let t0 = 0, raf = 0, last = 0;
   const frame = now => {
     raf = requestAnimationFrame(frame);
