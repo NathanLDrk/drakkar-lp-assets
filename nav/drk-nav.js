@@ -1,4 +1,4 @@
-/* Nav Drakkar (composant New__nav-V2) : fond au scroll, méga-menus, menu mobile. */
+/* Nav Drakkar (composant New__nav-V2) : masquage au scroll, ton clair / sombre, menus déroulants, menu mobile. */
 (() => {
   const nav = document.querySelector('[data-drk=nav]');
   if (!nav || nav.dataset.drkReady) return;
@@ -29,7 +29,16 @@
     nav.classList.toggle('drk-tone-dark', !light);
   };
   const queueTone = () => { if (!toneRaf) toneRaf = requestAnimationFrame(tone); };
-  const onScroll = () => { nav.classList.toggle('is-scrolled', scrollY > 20); queueTone(); };
+  /* Masquage : la nav se cache en descendant et revient dès qu'on remonte (jamais quand un menu est ouvert) */
+  let lastY = scrollY;
+  const hide = () => {
+    const y = scrollY, h = nav.offsetHeight;
+    if (nav.classList.contains('is-menu') || nav.matches(':focus-within') || y <= h) nav.classList.remove('is-hidden');
+    else if (y > lastY + 4) nav.classList.add('is-hidden');
+    else if (y < lastY - 4) nav.classList.remove('is-hidden');
+    lastY = y;
+  };
+  const onScroll = () => { nav.classList.toggle('is-scrolled', scrollY > 20); hide(); queueTone(); };
   addEventListener('scroll', onScroll, { passive: true }); onScroll();
   addEventListener('resize', queueTone); addEventListener('load', queueTone); setTimeout(queueTone, 400);
 
