@@ -25,7 +25,7 @@ const x = c.getContext('2d'); x.drawImage(portrait, 0, 0);
 const d = x.getImageData(0, 0, LW, LH).data;
 lum = new Float32Array(LW * LH);
 for (let i = 0; i < lum.length; i++) lum[i] = d[i * 4] / 255;
-build();
+schedule();
 };
 const sample = (u, v) => { // bilinéaire, u/v en 0..1
 if (u < 0 || v < 0 || u >= 1 || v >= 1) return 0;
@@ -35,8 +35,11 @@ return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + e * fx) * fy;
 };
 let last = 0, raf = 0;
 let CELL = 8, W, H, cols, rows, cells = [], drops = [];
+let key = '', pend = false;
+const schedule = () => { if (!pend) { pend = true; requestAnimationFrame(() => { pend = false; build(); }); } }; // regroupe les appels (observer, image chargée)
 function build() {
 const r = host.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+const k = Math.round(r.width) + 'x' + Math.round(r.height) + ':' + !!lum; if (k === key || !r.width || !lum) return; key = k; // on attend le portrait : un seul calcul au lieu de deux
 W = r.width; H = r.height; CELL = 6;
 cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -47,7 +50,7 @@ const ox = wide ? W * .8 - pw / 2 : (W - pw) / 2, oy = H - ph, gain = wide ? 1 :
 cells = [];
 for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
 const px = i * CELL + CELL / 2, py = j * CELL + CELL / 2;
-const m = lum ? sample((px - ox) / pw, (py - oy) / ph) * gain : 0;
+const m = lum && px >= ox && px < ox + pw && py >= oy ? sample((px - ox) / pw, (py - oy) / ph) * gain : 0; // l'échantillonnage ne sert que dans le cadre du portrait
 cells.push({ px, py, m, c: Math.random() < .5 ? '0' : '1', th: .75 * Math.random() + .25 * (j / rows) });
 }
 drops = Array.from({ length: cols }, () => ({ y: Math.random() * rows * 2 - rows, v: .15 + Math.random() * .3 }));
@@ -60,12 +63,15 @@ gx.fillText('0', g / 2, g / 2); gx.fillText('1', g * 1.5, g / 2); GS = g; GD = g
 faceCv = document.createElement('canvas'); faceCv.width = cv.width; faceCv.height = cv.height; faceX = faceCv.getContext('2d'); faceX.setTransform(dpr, 0, 0, dpr, 0, 0); faceF = -1;
 /* fond : toutes les cellules à 2 %, peint une fois (les inversions à ce niveau sont invisibles) */
 base = document.createElement('canvas'); base.width = cv.width; base.height = cv.height;
-const bx = base.getContext('2d'); bx.setTransform(dpr, 0, 0, dpr, 0, 0); bx.globalAlpha = .02;
-for (const c of cells) bx.drawImage(glyph, c.c === '0' ? 0 : GS, 0, GS, GS, c.px - GD / 2, c.py - GD / 2, GD, GD);
+/* une tuile de 32 × 32 cellules répétée : un seul remplissage au lieu de ~20 000 dessins */
+const T = 32, tile = document.createElement('canvas'); tile.width = Math.round(T * CELL * dpr); tile.height = tile.width;
+const tx = tile.getContext('2d'); tx.setTransform(dpr, 0, 0, dpr, 0, 0); tx.globalAlpha = .02;
+for (let j = 0; j < T; j++) for (let i = 0; i < T; i++) tx.drawImage(glyph, Math.random() < .5 ? 0 : GS, 0, GS, GS, i * CELL + CELL / 2 - GD / 2, j * CELL + CELL / 2 - GD / 2, GD, GD);
+const bx = base.getContext('2d'); bx.fillStyle = bx.createPattern(tile, 'repeat'); bx.fillRect(0, 0, base.width, base.height);
 if (!raf) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.clearRect(0, 0, cv.width, cv.height); ctx.drawImage(base, 0, 0); }
 }
 let glyph = null, base = null, GS = 0, GD = 0, face = [], A = new Float32Array(0), seen = new Uint32Array(0), stamp = 0, hit = [], faceCv = null, faceX = null, faceF = -1, faceN = 0;
-new ResizeObserver(build).observe(host); build();
+new ResizeObserver(schedule).observe(host); schedule();
 let mx = -1e4, my = -1e4;
 host.addEventListener('pointermove', e => { const r = host.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; }, { passive: true });
 host.addEventListener('pointerleave', () => { mx = my = -1e4; });
