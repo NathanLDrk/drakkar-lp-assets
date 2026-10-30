@@ -33,6 +33,7 @@ const x = u * (LW - 1), y = v * (LH - 1), i = x | 0, j = y | 0, fx = x - i, fy =
 const a = lum[j * LW + i], b = lum[j * LW + Math.min(i + 1, LW - 1)], c = lum[Math.min(j + 1, LH - 1) * LW + i], e = lum[Math.min(j + 1, LH - 1) * LW + Math.min(i + 1, LW - 1)];
 return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + e * fx) * fy;
 };
+let last = 0, raf = 0;
 let CELL = 8, W, H, cols, rows, cells = [], drops = [];
 function build() {
 const r = host.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
@@ -50,7 +51,20 @@ const m = lum ? sample((px - ox) / pw, (py - oy) / ph) * gain : 0;
 cells.push({ px, py, m, c: Math.random() < .5 ? '0' : '1', th: .75 * Math.random() + .25 * (j / rows) });
 }
 drops = Array.from({ length: cols }, () => ({ y: Math.random() * rows * 2 - rows, v: .15 + Math.random() * .3 }));
+face = []; for (let k = 0; k < cells.length; k++) if (cells[k].m > .03) face.push(k);
+A = new Float32Array(cells.length); seen = new Uint32Array(cells.length); stamp = 0;
+/* atlas des deux glyphes : drawImage coûte bien moins que fillText sur ~20 000 cellules */
+const g = Math.ceil(CELL * dpr) + 2; glyph = document.createElement('canvas'); glyph.width = g * 2; glyph.height = g;
+const gx = glyph.getContext('2d'); gx.font = `600 ${CELL * dpr}px ui-monospace, Menlo, monospace`; gx.textAlign = 'center'; gx.textBaseline = 'middle'; gx.fillStyle = '#fff';
+gx.fillText('0', g / 2, g / 2); gx.fillText('1', g * 1.5, g / 2); GS = g; GD = g / dpr;
+faceCv = document.createElement('canvas'); faceCv.width = cv.width; faceCv.height = cv.height; faceX = faceCv.getContext('2d'); faceX.setTransform(dpr, 0, 0, dpr, 0, 0); faceF = -1;
+/* fond : toutes les cellules à 2 %, peint une fois (les inversions à ce niveau sont invisibles) */
+base = document.createElement('canvas'); base.width = cv.width; base.height = cv.height;
+const bx = base.getContext('2d'); bx.setTransform(dpr, 0, 0, dpr, 0, 0); bx.globalAlpha = .02;
+for (const c of cells) bx.drawImage(glyph, c.c === '0' ? 0 : GS, 0, GS, GS, c.px - GD / 2, c.py - GD / 2, GD, GD);
+if (!raf) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.clearRect(0, 0, cv.width, cv.height); ctx.drawImage(base, 0, 0); }
 }
+let glyph = null, base = null, GS = 0, GD = 0, face = [], A = new Float32Array(0), seen = new Uint32Array(0), stamp = 0, hit = [], faceCv = null, faceX = null, faceF = -1, faceN = 0;
 new ResizeObserver(build).observe(host); build();
 let mx = -1e4, my = -1e4;
 host.addEventListener('pointermove', e => { const r = host.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; }, { passive: true });
@@ -71,7 +85,6 @@ const t = (now - t0) / 1000; if (t < 0) return 0;
 const c = t % CYCLE;
 return c < FORM ? ease(c / FORM) : c < FORM + HOLD ? 1 : c < FORM + HOLD + OUT ? 1 - ease((c - FORM - HOLD) / OUT) : 0;
 };
-let last = 0, raf = 0;
 const flip = c => { c.c = c.c === '0' ? '1' : '0'; };
 const frame = now => {
 raf = requestAnimationFrame(frame);
@@ -80,21 +93,45 @@ last = now;
 const f = reduce ? 1 : formAt(now);
 if (!reduce) sync(now);
 drops.forEach(d => { d.y += d.v; if (d.y > rows + 30) { d.y = -Math.random() * rows * .5; d.v = .15 + Math.random() * .3; } });
-ctx.clearRect(0, 0, W, H); ctx.fillStyle = '#fff';
-for (let k = 0; k < cells.length; k++) {
-const c = cells[k], i = k % cols, j = (k / cols) | 0;
-const behind = drops[i].y - j;                                   // traînée au-dessus de la goutte
-let a = .02 + (behind >= 0 && behind < 22 ? .05 * (1 - behind / 22) : 0) + (behind >= 0 && behind < 1 ? .09 : 0);
-const on = c.m > .03 && f > c.th;                                // chaque chiffre « se verrouille » à son tour
-if (on) a = Math.max(a, .85 * c.m ** .95);
-const dm = Math.hypot(c.px - mx, c.py - my);
-if (dm < 100) { a += .14 * (1 - dm / 100); if (Math.random() < .3) flip(c); }
-if (Math.random() < (on ? .006 : .02)) flip(c);
-if (a < .012) continue;
-ctx.globalAlpha = Math.min(a, .75);
-ctx.fillText(c.c, c.px, c.py);
+ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.clearRect(0, 0, cv.width, cv.height); if (base) ctx.drawImage(base, 0, 0);
+const dpr = cv.width / W; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+/* on ne parcourt que les cellules visibles au-dessus du fond : traînées, visage, zone du curseur */
+stamp++; hit.length = 0;
+const touch = (k, a) => { if (seen[k] !== stamp) { seen[k] = stamp; A[k] = a; hit.push(k); } else if (a > A[k]) A[k] = a; };
+for (let i = 0; i < cols; i++) {
+const y = drops[i].y, j1 = Math.min(rows - 1, Math.floor(y)), j0 = Math.max(0, Math.ceil(y - 22));
+for (let j = j0; j <= j1; j++) { const behind = y - j; touch(j * cols + i, .05 * (1 - behind / 22) + (behind < 1 ? .09 : 0)); }
+}
+/* visage : calque à part, repeint quand il bouge (formation, dissolution) et sinon 2 à 3 fois par seconde pour les inversions */
+if (f !== faceF || ++faceN >= 12) {
+faceF = f; faceN = 0;
+faceX.setTransform(1, 0, 0, 1, 0, 0); faceX.clearRect(0, 0, faceCv.width, faceCv.height); faceX.setTransform(dpr, 0, 0, dpr, 0, 0);
+for (let n = 0; n < face.length; n++) {
+const c = cells[face[n]]; if (!(f > c.th)) continue;
+if (Math.random() < .07) flip(c);
+faceX.globalAlpha = Math.min(.85 * c.m ** .95 - .02, .73);
+faceX.drawImage(glyph, c.c === '0' ? 0 : GS, 0, GS, GS, c.px - GD / 2, c.py - GD / 2, GD, GD);
+}
+}
+ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.drawImage(faceCv, 0, 0); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+if (mx > -1e3) {
+const i0 = Math.max(0, ((mx - 100) / CELL) | 0), i1 = Math.min(cols - 1, ((mx + 100) / CELL) | 0), j0 = Math.max(0, ((my - 100) / CELL) | 0), j1 = Math.min(rows - 1, ((my + 100) / CELL) | 0);
+for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const k = j * cols + i, c = cells[k], dm = Math.hypot(c.px - mx, c.py - my); if (dm < 100) { const add = .14 * (1 - dm / 100); if (seen[k] === stamp) A[k] += add; else touch(k, add); if (Math.random() < .3) flip(c); } }
+}
+for (let n = 0; n < hit.length; n++) {
+const k = hit[n], c = cells[k], a = A[k];
+if (Math.random() < .02) flip(c);
+if (a < .004) continue;                                          // le fond à 2 % est déjà peint
+ctx.globalAlpha = Math.min(a, .73);
+ctx.drawImage(glyph, c.c === '0' ? 0 : GS, 0, GS, GS, c.px - GD / 2, c.py - GD / 2, GD, GD);
 }
 if (reduce) { cancelAnimationFrame(raf); raf = 0; }
 };
-new IntersectionObserver(es => { if (es.at(-1).isIntersecting) { if (!raf) raf = requestAnimationFrame(frame); } else { cancelAnimationFrame(raf); raf = 0; } }).observe(host);
+/* la pluie démarre une fois la page chargée et posée (ou dès la première interaction) : le chargement initial reste léger */
+let ready = false, vis = false;
+const go = () => { if (ready) return; ready = true; t0 = performance.now(); lastN = 0; ['pointermove', 'scroll', 'keydown', 'touchstart'].forEach(e => removeEventListener(e, go)); if (vis && !raf) raf = requestAnimationFrame(frame); };
+['pointermove', 'scroll', 'keydown', 'touchstart'].forEach(e => addEventListener(e, go, { passive: true }));
+const later = () => setTimeout(() => (window.requestIdleCallback || setTimeout)(go, { timeout: 1500 }), 2500);
+document.readyState === 'complete' ? later() : addEventListener('load', later, { once: true });
+new IntersectionObserver(es => { vis = es.at(-1).isIntersecting; if (vis) { if (ready && !raf) raf = requestAnimationFrame(frame); } else { cancelAnimationFrame(raf); raf = 0; } }).observe(host);
 })();
